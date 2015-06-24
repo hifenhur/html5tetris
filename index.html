@@ -1,0 +1,146 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	
+</head>
+<body>
+<canvas id="canvas" width="200" height="200"></canvas>
+
+<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script type="text/javascript">
+
+
+    var canvas = $("#canvas")[0];
+    var ctx = canvas.getContext("2d");
+    var w = $("#canvas").width();
+    var h = $("#canvas").height();
+
+    var blocks = []
+    var current_block = null
+    var static_blocks = [];
+
+    var direction = "right"
+
+    var food = null;
+
+    var cw = 10;
+
+    initBlocks();
+    startGame();
+
+
+    function paint_cell(x, y) {
+        ctx.fillStyle = "blue";
+        ctx.fillRect(x * cw, y * cw, cw, cw);
+        ctx.strokeStyle = "white";
+        ctx.strokeRect(x * cw, y * cw, cw, cw);
+    }
+
+    $('html').on('keyup', function(e){
+    	if(e.which == 38){
+    		direction = "down";
+    	}else if(e.which == 37){
+    		direction = "left";
+    	}else if(e.which == 39){
+    		direction = "right"
+    	}
+    });
+
+    function moveBlock(){
+
+    	lx = current_block.x
+    	ly = current_block.y
+
+    	if (check_colapse()) {
+    		nb = new Object(current_block);
+    		static_blocks.push(nb);
+    		current_block = getRandomBlock();
+    	}else{
+	    	for (var i = 0; i < current_block.length; i++) {
+	            current_block[i].y++;
+	        }
+    	}
+
+    	paint();
+    }
+
+    
+
+    
+
+	function paint(){
+		ctx.fillStyle = "white"
+		ctx.fillRect(0,0,w, h);
+
+		for (var i = 0; i < current_block.length; i++) {
+			paint_cell(current_block[i].x, current_block[i].y)
+		};
+
+		for (var i = 0; i < static_blocks.length; i++) {
+			sb = static_blocks[i];
+			for (var i = 0; i < sb.length; i++) {
+				paint_cell(sb[i].x, sb[i].y)
+			}
+            
+        };
+	}
+
+	
+
+	function initBlocks(){
+		quadrado = [
+	        {x:0, y:0},
+	        {x:0, y:1},
+	        {x:1, y:0},
+	        {x:1, y:1}
+        ]
+	    reto = [
+	    	{x:0, y:0},
+	        {x:1, y:0},
+	        {x:2, y:0},
+	        {x:3, y:0}
+	    ]
+
+	    blocks.push(quadrado)
+	    blocks.push(reto)
+	}
+
+    function startGame(){
+
+        current_block = getRandomBlock();
+
+        for (var i = 0; i < current_block.length; i++) {
+            paint_cell(current_block[i].x, current_block[i].y)
+        };
+
+    }
+   
+
+    
+
+    function getRandomBlock(){
+		return blocks[Math.floor(Math.random()*blocks.length)];
+    }
+
+    function check_colapse(){
+    	
+    	for (var i = current_block.length - 1; i > 0 ; i--) {
+
+			if ((current_block[i].y == 5) ){
+				return true;
+			}else{
+				return false;
+			}
+        }
+		
+	}
+
+    
+	
+		
+</script>
+</body>
+</html>
