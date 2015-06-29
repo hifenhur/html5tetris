@@ -7,7 +7,7 @@
 	
 </head>
 <body>
-<canvas id="canvas" width="200" height="200"></canvas>
+<canvas id="canvas" width="70" height="130"></canvas>
 
 <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script type="text/javascript">
@@ -103,9 +103,16 @@
 	        {x:2, y:0},
 	        {x:3, y:0}
 	    ]
+        z = [
+            {x:0, y:0},
+            {x:1, y:0},
+            {x:1, y:1},
+            {x:2, y:1}
+        ]
 
-	    blocks.push(quadrado)
-	    blocks.push(reto)
+	    blocks.push(quadrado);
+	    blocks.push(reto);
+        blocks.push(z);
 	}
 
     function startGame(){
@@ -122,14 +129,14 @@
     
 
     function getRandomBlock(){
-		return blocks[Math.floor(Math.random()*blocks.length)];
+		return JSON.parse(JSON.stringify((blocks[Math.floor(Math.random()*blocks.length)])));
     }
 
     function check_colapse(){
     	
     	for (var i = current_block.length - 1; i > 0 ; i--) {
 
-			if ((current_block[i].y == 5) ){
+			if ((current_block[i].y == (h/cw) - 1) || checkColapseWithAnotherBlock(current_block[i].x, current_block[i].y) ){
 				return true;
 			}else{
 				return false;
@@ -138,9 +145,26 @@
 		
 	}
 
+    function checkColapseWithAnotherBlock(x, y){
+        for (var z = 0; z < static_blocks.length; z++) {
+            for (var i = 0; i < static_blocks[z].length; i++) {
+                if (x == static_blocks[z][i].x && y == static_blocks[z][i].y - 1) {
+                    return true;
+                }        
+            };    
+        };
+        
+    }
+
     
 	
 		
 </script>
+
+<style type="text/css">
+    canvas{
+        border: 1px solid black;
+    }
+</style>
 </body>
 </html>
