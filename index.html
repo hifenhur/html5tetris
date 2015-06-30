@@ -1,10 +1,7 @@
-
-
 <!DOCTYPE html>
 <html>
 <head>
 	<title></title>
-	
 </head>
 <body>
 <canvas id="canvas" width="70" height="130"></canvas>
@@ -15,31 +12,38 @@
 
     var canvas = $("#canvas")[0];
     var ctx = canvas.getContext("2d");
-    var w = $("#canvas").width();
-    var h = $("#canvas").height();
+    
+    var cw = Math.floor(window.innerHeight / 20);
+
+    canvas.height = Math.floor(window.innerHeight / cw) * cw
+    canvas.width  = Math.floor((canvas.height / 2) / cw) * cw
+
+    var h = canvas.height;
+    var w = canvas.width;
+    
 
     var blocks = []
-    var current_block = null
-    var static_blocks = [];
+    var currentBlock = null
+    var staticBlocks = [];
 
     var direction = "right"
 
     var food = null;
 
-    var cw = 10;
+    
 
     initBlocks();
     startGame();
 
 
-    function paint_cell(x, y) {
+    function paintCell(x, y) {
         ctx.fillStyle = "blue";
         ctx.fillRect(x * cw, y * cw, cw, cw);
         ctx.strokeStyle = "white";
         ctx.strokeRect(x * cw, y * cw, cw, cw);
     }
 
-    $('html').on('keyup', function(e){
+    $('html').on('keydown', function(e){
     	if(e.which == 38){
     		direction = "down";
     	}else if(e.which == 37){
@@ -47,26 +51,46 @@
     	}else if(e.which == 39){
     		direction = "right"
     	}
+
+        moveBlock(direction);
     });
 
-    function moveBlock(){
+    function moveBlock(direction){
 
-    	lx = current_block.x
-    	ly = current_block.y
-
-    	if (check_colapse()) {
-    		nb = new Object(current_block);
-    		static_blocks.push(nb);
-    		current_block = getRandomBlock();
-    	}else{
-	    	for (var i = 0; i < current_block.length; i++) {
-	            current_block[i].y++;
-	        }
+    	if (checkColapse()) {
+    		nb = new Object(currentBlock);
+    		staticBlocks.push(nb);
+    		currentBlock = getRandomBlock();
+    	}else if (!outOfLimit(direction)){
+            for (var i = 0; i < currentBlock.length; i++) {
+                if (direction == "down") {
+    	            currentBlock[i].y++;
+    	        }else if (direction == "right") {
+                    currentBlock[i].x++;
+                }else if (direction == "left") {
+                    currentBlock[i].x--;
+                }
+            }
     	}
+        destroyLine();
 
     	paint();
     }
 
+    function outOfLimit(direction){
+        for (var i = 0; i < currentBlock.length; i++) {
+            if (direction == "right") {
+                if (currentBlock[i].x == ((w/cw) -1) ) {
+                    return true
+                }
+            }else if (direction == "left"){
+                if (currentBlock[i].x == 0 ) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
     
 
     
@@ -75,14 +99,14 @@
 		ctx.fillStyle = "white"
 		ctx.fillRect(0,0,w, h);
 
-		for (var i = 0; i < current_block.length; i++) {
-			paint_cell(current_block[i].x, current_block[i].y)
+		for (var i = 0; i < currentBlock.length; i++) {
+			paintCell(currentBlock[i].x, currentBlock[i].y)
 		};
 
-		for (var i = 0; i < static_blocks.length; i++) {
-			sb = static_blocks[i];
-			for (var i = 0; i < sb.length; i++) {
-				paint_cell(sb[i].x, sb[i].y)
+		for (var i = 0; i < staticBlocks.length; i++) {
+			sb = staticBlocks[i];
+			for (var x = 0; x < sb.length; x++) {
+				paintCell(sb[x].x, sb[x].y)
 			}
             
         };
@@ -109,18 +133,25 @@
             {x:1, y:1},
             {x:2, y:1}
         ]
+        l = [
+            {x:0, y:0},
+            {x:0, y:1},
+            {x:0, y:2},
+            {x:1, y:2}
+        ]
 
 	    blocks.push(quadrado);
 	    blocks.push(reto);
         blocks.push(z);
+        blocks.push(l);
 	}
 
     function startGame(){
 
-        current_block = getRandomBlock();
-
-        for (var i = 0; i < current_block.length; i++) {
-            paint_cell(current_block[i].x, current_block[i].y)
+        currentBlock = getRandomBlock();
+        staticBlocks = [];
+        for (var i = 0; i < currentBlock.length; i++) {
+            paintCell(currentBlock[i].x, currentBlock[i].y)
         };
 
     }
@@ -132,11 +163,11 @@
 		return JSON.parse(JSON.stringify((blocks[Math.floor(Math.random()*blocks.length)])));
     }
 
-    function check_colapse(){
+    function checkColapse(){
     	
-    	for (var i = current_block.length - 1; i > 0 ; i--) {
+    	for (var i = currentBlock.length - 1; i > 0 ; i--) {
 
-			if ((current_block[i].y == (h/cw) - 1) || checkColapseWithAnotherBlock(current_block[i].x, current_block[i].y) ){
+			if ((currentBlock[i].y == (h/cw) - 1) || checkColapseWithAnotherBlock(currentBlock)){
 				return true;
 			}else{
 				return false;
@@ -145,17 +176,67 @@
 		
 	}
 
-    function checkColapseWithAnotherBlock(x, y){
-        for (var z = 0; z < static_blocks.length; z++) {
-            for (var i = 0; i < static_blocks[z].length; i++) {
-                if (x == static_blocks[z][i].x && y == static_blocks[z][i].y - 1) {
-                    return true;
-                }        
-            };    
-        };
-        
+    function checkColapseWithAnotherBlock(currentBlock){
+        for (var cb = 0; cb < currentBlock.length; cb++) {
+            for (var z = 0; z < staticBlocks.length; z++) {
+                for (var i = 0; i < staticBlocks[z].length; i++) {
+                    if (currentBlock[cb].x == staticBlocks[z][i].x && currentBlock[cb].y == staticBlocks[z][i].y - 1) {
+                        return true;
+                    }        
+                }
+            }
+        }
     }
 
+    function destroyLine(){
+        lines = {}
+        staticBlocks.forEach(function(staticBlock){
+            staticBlock.forEach(function(cell){
+                if (typeof lines[cell.y] == "undefined"){
+                    lines[cell.y] = []
+                    lines[cell.y].push(cell.x)
+                }else{
+                    lines[cell.y].push(cell.x)
+                }
+            });
+        })
+        
+        keys = Object.keys(lines)
+        
+        keys.forEach(function(key){
+            if(lines[key].length == (w/cw)){
+                console.log('apagar linha'+ key)
+                eraseLine(key)
+            }
+        })
+    }
+
+    function eraseLine(key){
+        staticBlocks.forEach(function(staticBlock, i){
+            staticBlock.forEach(function(cell, x){
+                if (cell.y == key){
+                    staticBlocks[i][x] = staticBlock.filter(function(sCell){ return sCell.y != key})
+                }else{
+                    
+                }
+            });
+        })
+
+        staticBlocks.forEach(function(staticBlock){
+            staticBlock.forEach(function(cell){
+                if (cell.y < key) {
+                    cell.y++;
+                }
+            });
+        })
+    }
+
+
+
+    window.setInterval(function(){
+        moveBlock("down");
+
+    }, 300);
     
 	
 		
