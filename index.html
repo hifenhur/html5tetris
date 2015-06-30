@@ -44,13 +44,16 @@
     }
 
     $('html').on('keydown', function(e){
+        console.log(e.which)
     	if(e.which == 38){
-    		direction = "down";
+    		direction = "up";
     	}else if(e.which == 37){
     		direction = "left";
     	}else if(e.which == 39){
     		direction = "right"
-    	}
+    	}else if(e.which == 40){
+            direction = "down"
+        }
 
         moveBlock(direction);
     });
